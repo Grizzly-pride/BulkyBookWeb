@@ -62,7 +62,6 @@ namespace BulkyBookWeb.Controllers
                 })
             };
 
-
 			if (id is null || id is 0) 
             {
                 //create product
@@ -72,10 +71,10 @@ namespace BulkyBookWeb.Controllers
             }
             else 
             {
-                //update product
+                productView.Product = _unitOfWork.Product.GetFirstOrDefault(u => u.Id == id);
+			    return View(productView);
             }
 
-			return View(productView);
 		}
          
 		[HttpPost]
