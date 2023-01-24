@@ -110,14 +110,7 @@ namespace BulkyBookWeb.Controllers
             }
             return View(obj);
         }
-
-         
-
-		[HttpDelete]
-		public IActionResult Delete(int? id)
-        {
-            return View();
-        }
+       
 
         #region API CALS
         [HttpGet]
@@ -127,5 +120,25 @@ namespace BulkyBookWeb.Controllers
             return Json(new { data = productList });
         }
 		#endregion
-	}
+
+		[HttpDelete]
+        public IActionResult Delete(int? id)
+        {
+            var obj = _unitOfWork.Product.GetFirstOrDefault(u => u.Id == id);
+            if (obj == null)
+            {
+                return Json(new { success = false, message = "Error while deleting" });
+            }
+
+            var oldImagePath = Path.Combine(_hostEnvironment.WebRootPath, obj.ImageUrl.TrimStart('\\'));
+            if (System.IO.File.Exists(oldImagePath))
+            {
+                System.IO.File.Delete(oldImagePath);
+            }
+
+            _unitOfWork.Product.Remove(obj);
+            _unitOfWork.Save();
+            return Json(new { success = true, message = "Delete Successful" });
+        }
+    }
 }
