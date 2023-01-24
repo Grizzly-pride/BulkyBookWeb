@@ -1,10 +1,9 @@
-﻿using BulkyBook.DataAccess;
-using BulkyBook.DataAccess.Repository.IRepositpry;
+﻿using BulkyBook.DataAccess.Repository.IRepositpry;
 using BulkyBook.Models;
 using BulkyBook.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using System.Collections.Generic;
+
 
 namespace BulkyBookWeb.Controllers
 {
@@ -22,29 +21,10 @@ namespace BulkyBookWeb.Controllers
 
         public IActionResult Index()
         {
-
             return View();
         }
 
-        public IActionResult Create()
-        {
-            return View();
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult Create(Product obj)
-        {
-            if (ModelState.IsValid)
-            {
-				_unitOfWork.Product.Add(obj);
-				_unitOfWork.Save();
-                TempData["success"] = "Product created successfully";
-                return RedirectToAction("Index");
-            }
-            return View(obj);
-        }
-
+		[HttpGet]
 		public IActionResult Upsert(int? id)
 		{
             ProductViewModel productView = new()
@@ -62,11 +42,8 @@ namespace BulkyBookWeb.Controllers
                 })
             };
 
-			if (id is null || id is 0) 
+			if (id == null || id == 0) 
             {
-                //create product
-                //ViewBag.CategoryList = CategoryList;
-                //ViewData["CoverTypeList"] = CoverTypeList;
                 return View(productView);
             }
             else 
@@ -74,60 +51,72 @@ namespace BulkyBookWeb.Controllers
                 productView.Product = _unitOfWork.Product.GetFirstOrDefault(u => u.Id == id);
 			    return View(productView);
             }
-
 		}
-         
+
 		[HttpPost]
 		[ValidateAntiForgeryToken]
-		public IActionResult Upsert(ProductViewModel obj, IFormFile file)
+		public IActionResult Upsert(ProductViewModel obj, IFormFile? file)
 		{
-
 			if (ModelState.IsValid)
 			{
                 string wwwRootPath = _hostEnvironment.WebRootPath;
                 if (file is not null) 
                 {
                     string fileName = Guid.NewGuid().ToString();
-                    var uploads = Path.Combine(wwwRootPath, @"images\products");
-                    var extension = Path.GetExtension(file.FileName);
+                    string uploads = Path.Combine(wwwRootPath, @"images\products");
+                    string extension = Path.GetExtension(file.FileName);
+
+                    if (obj.Product.ImageUrl != null)
+                    {
+                        string oldImagePath = Path.Combine(wwwRootPath, obj.Product.ImageUrl.TrimStart('\\'));
+                        if (System.IO.File.Exists(oldImagePath))
+                        {
+                            System.IO.File.Delete(oldImagePath);
+                        }
+                    }
 
                     using (var fileStrim = new FileStream(Path.Combine(uploads, fileName + extension), FileMode.Create)) 
                     {
                         file.CopyTo(fileStrim);
                     }
-                    obj.Product.ImageUrl = @"\image\products" + fileName + extension;
+                    obj.Product.ImageUrl = @"\images\products\" + fileName + extension;
                 }
-				_unitOfWork.Product.Add(obj.Product);
+				if (obj.Product.Id == 0)
+				{
+					_unitOfWork.Product.Add(obj.Product);
+				}
+				else
+				{
+					_unitOfWork.Product.Update(obj.Product);
+				}
+
 				_unitOfWork.Save();
                 TempData["success"] = "Product added successfully";
-                return RedirectToAction("Index");
+                return RedirectToAction(nameof(Index));
 			}
-			return View(obj);
+			return RedirectToAction();
 		}
 
-        public IActionResult Delete(int? id)
+		[HttpPost]
+		[ValidateAntiForgeryToken]
+		public IActionResult Create(Product obj)
         {
-            if (id is null || id is 0) { return NotFound(); }
-
-            var ProductFromDbFirst = _unitOfWork.Product.GetFirstOrDefault(u => u.Id == id);
-
-            if (ProductFromDbFirst is null) { return NotFound(); }
-
-            return View(ProductFromDbFirst);
+			if (ModelState.IsValid)
+            {
+				_unitOfWork.Product.Add(obj);
+				_unitOfWork.Save();
+                TempData["success"] = "Product created successfully";
+                return RedirectToAction("Index");
+            }
+            return View(obj);
         }
 
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public IActionResult DeletePOST(int? id)
+         
+
+		[HttpDelete]
+		public IActionResult Delete(int? id)
         {
-            var ProductFromDb = _unitOfWork.Product.GetFirstOrDefault(u => u.Id == id);
-
-			if (ProductFromDb is null) { return NotFound(); }
-
-            _unitOfWork.Product.Remove(ProductFromDb);
-            _unitOfWork.Save();
-            TempData["success"] = "Product deleted successfully";
-            return RedirectToAction("Index");       
+            return View();
         }
 
         #region API CALS
