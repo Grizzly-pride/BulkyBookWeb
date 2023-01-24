@@ -138,6 +138,7 @@ namespace BulkyBookWeb.Controllers
 
             _unitOfWork.Product.Remove(obj);
             _unitOfWork.Save();
+
             return Json(new { success = true, message = "Delete Successful" });
         }
     }
