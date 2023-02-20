@@ -1,11 +1,6 @@
 ﻿using BulkyBook.DataAccess.Repository.IRepositpry;
 using BulkyBook.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace BulkyBook.DataAccess.Repository
 {
@@ -18,6 +13,6 @@ namespace BulkyBook.DataAccess.Repository
 			_db = db;
 		}
 
-		public void Update(CoverType obj) => _db.Update(obj);
+		public void Update(CoverType obj) => _db.CoverTypes.Update(obj);
 	}
 }

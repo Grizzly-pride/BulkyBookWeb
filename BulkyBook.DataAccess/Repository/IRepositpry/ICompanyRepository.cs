@@ -2,8 +2,8 @@
 
 namespace BulkyBook.DataAccess.Repository.IRepositpry
 {
-	public interface IProductRepository : IRepository<Product>
+	public interface ICompanyRepository : IRepository<Company>
 	{
-		void Update(Product obj);
+		void Update(Company obj);
 	}
 }
