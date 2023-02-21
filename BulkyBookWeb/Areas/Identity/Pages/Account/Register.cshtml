@@ -3,8 +3,6 @@
 @{
     ViewData["Title"] = "Register";
 }
-<input asp-for="@Model.Input.RoleList" hidden />
-<input asp-for="@Model.Input.CompanyList" hidden />
 
 <h1 class="pt-4">@ViewData["Title"]</h1>
 
@@ -61,17 +59,18 @@
             </div>
             <div class="form-floating py-2 col-6">
                 <select asp-for="Input.Role" asp-items="@Model.Input.RoleList" class="form-select">
-                    <option display selected>-Select Role-</option>
+                    <option disabled selected>-Select Role-</option>
                 </select>
             </div>
             <div class="form-floating py-2 col-6">
-                <select asp-for="Input.CompanyId" asp-items="@Model.Input.CompanyList" class="form-select">
-                    <option display selected>-Select Company-</option>
+                <select asp-for="Input.CompanyId" style="display:none;" asp-items="@Model.Input.CompanyList" class="form-select">
+                    <option disabled selected>-Select Company-</option>
                 </select>
             </div>
             <button id="registerSubmit" type="submit" class="w-100 btn btn-primary">Register</button>
         </form>
     </div>
+
     <div class="col-md-5">
         <section>
             <h3>Use another service to register.</h3>
@@ -106,4 +105,18 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        $(document).ready(function () {
+            $('#Input_Role').change(function () {
+                var selection = $('#Input_Role Option:Selected').text();
+                if (selection != 'Company') {
+                    $('#Input_CompanyId').hide();
+                }
+                else {
+                    $('#Input_CompanyId').show();
+                }
+            })
+        })
+    </script>
 }
