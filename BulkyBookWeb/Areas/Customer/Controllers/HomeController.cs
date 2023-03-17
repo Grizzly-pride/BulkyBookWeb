@@ -1,7 +1,6 @@
 ﻿using BulkyBook.DataAccess.Repository.IRepositpry;
 using BulkyBook.Migrations;
 using BulkyBook.Models;
-using BulkyBook.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
@@ -9,7 +8,7 @@ using System.Security.Claims;
 
 namespace BulkyBookWeb.Controllers
 {
-	[Area("Customer")]
+    [Area("Customer")]
 	public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
@@ -25,7 +24,7 @@ namespace BulkyBookWeb.Controllers
 
         public IActionResult Index()
         {
-            IEnumerable<Product> productList = _unitOfWork.Product.GetAll("Category", "CoverType");
+            IEnumerable<Product> productList = _unitOfWork.Product.GetAll(includeProperties: new string[] {"CoverType", "Category"});
             return View(productList);
         }
 

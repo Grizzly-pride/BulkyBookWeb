@@ -1,9 +1,9 @@
 ﻿using BulkyBook.DataAccess.Repository.IRepositpry;
-using BulkyBook.Models.ViewModels;
+using BulkyBook.Models;
 
 namespace BulkyBook.DataAccess.Repository
 {
-	public class ShoppingCartRepository : Repository<ShoppingCart>, IShoppingCartRepository
+    public class ShoppingCartRepository : Repository<ShoppingCart>, IShoppingCartRepository
 	{
         private ApplicationDbContext _db;
 
