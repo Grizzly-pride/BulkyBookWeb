@@ -1,12 +1,14 @@
 ﻿using BulkyBook.DataAccess.Repository.IRepositpry;
+using BulkyBook.Migrations;
 using BulkyBook.Models;
-using BulkyBook.Models.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
+using System.Security.Claims;
 
 namespace BulkyBookWeb.Controllers
 {
-	[Area("Customer")]
+    [Area("Customer")]
 	public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
@@ -22,24 +24,55 @@ namespace BulkyBookWeb.Controllers
 
         public IActionResult Index()
         {
-            IEnumerable<Product> productList = _unitOfWork.Product.GetAll("Category", "CoverType");
+            IEnumerable<Product> productList = _unitOfWork.Product.GetAll(includeProperties: new string[] {"CoverType", "Category"});
             return View(productList);
         }
 
-        public IActionResult Details(int id)
+        [HttpGet]
+        public IActionResult Details(int productId)
         {
             ShoppingCart cartObj = new()
             {
                 Count = 1,
+                ProductId = productId,
                 Product = _unitOfWork.Product.GetFirstOrDefault(
-					x => x.Id == id,
+					x => x.Id == productId,
 					"Category", "CoverType")
 		    };
 
 			return View(cartObj);
 		}
 
-        public IActionResult Privacy()
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize]
+		public IActionResult Details(ShoppingCart shoppingCart)
+		{
+            var claimsIdentity = (ClaimsIdentity)User.Identity;
+            var claim = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier);
+            shoppingCart.ApplicationUserId = claim.Value;
+
+            ShoppingCart cartFromDb = _unitOfWork.ShoppingCart
+                .GetFirstOrDefault(
+                x => x.ApplicationUserId == claim.Value
+                && x.ProductId == shoppingCart.ProductId);
+
+            if(cartFromDb is null) 
+            {
+                _unitOfWork.ShoppingCart.Add(shoppingCart);
+            }
+            else
+            {
+                _unitOfWork.ShoppingCart.IncrementCount(cartFromDb, shoppingCart.Count);
+            }
+
+            _unitOfWork.Save();
+
+
+			return RedirectToAction(nameof(Index));
+		}
+
+		public IActionResult Privacy()
         {
             return View();
         }
