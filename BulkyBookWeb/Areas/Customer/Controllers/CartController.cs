@@ -32,11 +32,10 @@ namespace BulkyBookWeb.Areas.Customer.Controllers
                     filter: u => u.ApplicationUserId == claim.Value,
                     includeProperties: "Product"),
 			};
-
+           
             foreach (var cart in ShoppingCartVM.ListCart)
             {
-                cart.Price = GetPriceBasedOnQuantity(cart.Count, cart.Product.Price,
-                    cart.Product.Price50, cart.Product.Price100);
+                cart.Price = GetPriceBasedOnQuantity(cart);
                 ShoppingCartVM.OrderHeader.OrderTotal += (cart.Price * cart.Count);
             }
 
@@ -45,8 +44,32 @@ namespace BulkyBookWeb.Areas.Customer.Controllers
 
         public IActionResult Summary()
         {
+            var claimIdentity = (ClaimsIdentity)User.Identity;
+            var userId = claimIdentity.FindFirst(ClaimTypes.NameIdentifier).Value;
 
-            return View();  
+            ShoppingCartVM = new()
+            {
+
+                ListCart = _unitOfWork.ShoppingCart.GetAll(u => u.ApplicationUserId == userId, includeProperties: "Product"),
+                OrderHeader = new(),
+            };
+
+            ShoppingCartVM.OrderHeader.ApplicationUser = _unitOfWork.ApplicationUser.GetFirstOrDefault(u => u.Id == userId);
+
+            ShoppingCartVM.OrderHeader.Name = ShoppingCartVM.OrderHeader.ApplicationUser.Name;
+            ShoppingCartVM.OrderHeader.PhoneNumber = ShoppingCartVM.OrderHeader.ApplicationUser.PhoneNumber;
+            ShoppingCartVM.OrderHeader.StreetAddress = ShoppingCartVM.OrderHeader.ApplicationUser.StreetAddress;
+            ShoppingCartVM.OrderHeader.City = ShoppingCartVM.OrderHeader.ApplicationUser.City;
+            ShoppingCartVM.OrderHeader.State = ShoppingCartVM.OrderHeader.ApplicationUser.State;
+            ShoppingCartVM.OrderHeader.PostalCode = ShoppingCartVM.OrderHeader.ApplicationUser.PostalCode;
+
+            foreach (var cart in ShoppingCartVM.ListCart)
+            {
+                cart.Price = GetPriceBasedOnQuantity(cart);
+                ShoppingCartVM.OrderHeader.OrderTotal += (cart.Price * cart.Count);
+            }
+
+            return View(ShoppingCartVM);  
         }
 
         public IActionResult Plus(int cartId) 
@@ -83,19 +106,22 @@ namespace BulkyBookWeb.Areas.Customer.Controllers
         }
 
 
-        private double GetPriceBasedOnQuantity(double quantity, double price, double price50, double price100)
+        private double GetPriceBasedOnQuantity(ShoppingCart shoppingCart)
         {
-            if (quantity <= 50)
+            if (shoppingCart.Count <= 50)
             {
-                return price;
+                return shoppingCart.Product.Price;
             }
             else
             {
-                if (quantity <= 100)
+                if (shoppingCart.Count <= 100)
                 {
-                    return price50;
+                    return shoppingCart.Product.Price50;
                 }
-                return price100;
+                else
+                {
+                    return shoppingCart.Product.Price100;
+                }
             }
         }
     }
