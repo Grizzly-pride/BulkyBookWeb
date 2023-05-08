@@ -124,8 +124,13 @@ namespace BulkyBookWeb.Areas.Customer.Controllers
 				_unitOfWork.Save();
 			}
 
-			return View(ShoppingCartVM);
+			return RedirectToAction(nameof(OrderConfirmation), new { id = ShoppingCartVM.OrderHeader.Id});
 		}
+
+        public IActionResult OrderConfirmation(int id)
+        {
+            return View(id);
+        }
 
 
 		public IActionResult Plus(int cartId) 
