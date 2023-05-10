@@ -20,6 +20,12 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>()
     .AddDefaultTokenProviders()
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
+builder.Services.AddSession(options => {
+	options.IdleTimeout = TimeSpan.FromMinutes(100);
+	options.Cookie.HttpOnly = true;
+	options.Cookie.IsEssential = true;
+});
+
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddSingleton<IEmailSender, EmailSender>();
 builder.Services.AddRazorPages().AddRazorRuntimeCompilation();
@@ -46,6 +52,7 @@ app.UseRouting();
 
 app.UseAuthentication();    
 app.UseAuthorization();
+app.UseSession();
 
 app.MapRazorPages();
 app.MapControllerRoute(
