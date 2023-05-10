@@ -176,7 +176,7 @@ namespace BulkyBookWeb.Areas.Identity.Pages.Account
                 {
                     _logger.LogInformation("User created a new account with password.");
 
-                    if (Input.Role == null)
+                    if (string.IsNullOrEmpty(Input.Role))
                     {
                         await _userManager.AddToRoleAsync(user, SD.Role_User_Indi);
                     }
@@ -203,7 +203,14 @@ namespace BulkyBookWeb.Areas.Identity.Pages.Account
                     }
                     else
                     {
-                        await _signInManager.SignInAsync(user, isPersistent: false);
+                        if (User.IsInRole(SD.Role_Admin))
+                        {
+                            TempData["success"] = "New User Created Successfully";
+                        }
+                        else
+                        {
+                            await _signInManager.SignInAsync(user, isPersistent: false);
+                        }
                         return LocalRedirect(returnUrl);
                     }
                 }
