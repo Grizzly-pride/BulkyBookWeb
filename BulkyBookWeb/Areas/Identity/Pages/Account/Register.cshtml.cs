@@ -165,7 +165,7 @@ namespace BulkyBookWeb.Areas.Identity.Pages.Account
                 user.Name = Input.Name;
                 user.PhoneNumber = Input.PhoneNumber;
 
-                if (Input.Role == SD.Role_User_Comp)
+                if (Input.Role == SD.Role_Company)
                 {
                     user.CompanyId = Input.CompanyId;
                 }
@@ -179,7 +179,7 @@ namespace BulkyBookWeb.Areas.Identity.Pages.Account
                     
                     if (string.IsNullOrEmpty(Input.Role))
                     {
-                        await _userManager.AddToRoleAsync(user, SD.Role_User_Indi);
+                        await _userManager.AddToRoleAsync(user, SD.Role_Customer);
                     }
                     else
                     {
