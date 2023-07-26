@@ -176,6 +176,7 @@ namespace BulkyBookWeb.Areas.Identity.Pages.Account
                 {
                     _logger.LogInformation("User created a new account with password.");
 
+                    
                     if (string.IsNullOrEmpty(Input.Role))
                     {
                         await _userManager.AddToRoleAsync(user, SD.Role_User_Indi);
@@ -183,7 +184,7 @@ namespace BulkyBookWeb.Areas.Identity.Pages.Account
                     else
                     {
                         await _userManager.AddToRoleAsync(user, Input.Role);
-                    }
+                    }                    
 
                     var userId = await _userManager.GetUserIdAsync(user);
                     var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
