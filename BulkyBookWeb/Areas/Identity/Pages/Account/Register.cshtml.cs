@@ -165,7 +165,7 @@ namespace BulkyBookWeb.Areas.Identity.Pages.Account
                 user.Name = Input.Name;
                 user.PhoneNumber = Input.PhoneNumber;
 
-                if (Input.Role == SD.Role_User_Comp)
+                if (Input.Role == SD.Role_Company)
                 {
                     user.CompanyId = Input.CompanyId;
                 }
@@ -176,14 +176,15 @@ namespace BulkyBookWeb.Areas.Identity.Pages.Account
                 {
                     _logger.LogInformation("User created a new account with password.");
 
+                    
                     if (string.IsNullOrEmpty(Input.Role))
                     {
-                        await _userManager.AddToRoleAsync(user, SD.Role_User_Indi);
+                        await _userManager.AddToRoleAsync(user, SD.Role_Customer);
                     }
                     else
                     {
                         await _userManager.AddToRoleAsync(user, Input.Role);
-                    }
+                    }                    
 
                     var userId = await _userManager.GetUserIdAsync(user);
                     var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
