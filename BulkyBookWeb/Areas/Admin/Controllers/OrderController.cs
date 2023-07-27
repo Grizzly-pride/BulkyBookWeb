@@ -1,11 +1,13 @@
 ﻿using BulkyBook.DataAccess.Repository.IRepositpry;
 using BulkyBook.Migrations;
+using BulkyBook.Models;
 using BulkyBook.Models.ViewModels;
 using BulkyBook.Utility;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Hosting;
 using System.Diagnostics;
+using System.Security.Claims;
 
 namespace BulkyBookWeb.Areas.Admin.Controllers;
 
@@ -70,28 +72,41 @@ public class OrderController : Controller
     [HttpGet]
     public IActionResult GetAll(string status)
     {
-        var orderList = _unitOfWork.OrderHeader
-            .GetAll(includeProperties: new string[] { "ApplicationUser"});
+        IEnumerable<OrderHeader> objOrderHeaders;
+
+        if (User.IsInRole(SD.Role_Admin) || User.IsInRole(SD.Role_Employee))
+        {
+            objOrderHeaders = _unitOfWork.OrderHeader.GetAll(includeProperties: "ApplicationUser").ToList();
+        }
+        else
+        {
+
+            var claimsIdentity = (ClaimsIdentity)User.Identity;
+            var userId = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier).Value;
+
+            objOrderHeaders = _unitOfWork.OrderHeader
+                .GetAll(u => u.ApplicationUserId == userId, includeProperties: "ApplicationUser");
+        }
 
         switch (status)
         {
             case "pending":
-                orderList = orderList.Where(i => i.PaymentStatus == SD.PaymentStatusDelayedPayment);
+                objOrderHeaders = objOrderHeaders.Where(i => i.PaymentStatus == SD.PaymentStatusDelayedPayment);
                 break;
             case "inprocess":
-                orderList = orderList.Where(i => i.OrderStatus == SD.StatusInProcess);
+                objOrderHeaders = objOrderHeaders.Where(i => i.OrderStatus == SD.StatusInProcess);
                 break;
             case "completed":
-                orderList = orderList.Where(i => i.OrderStatus == SD.StatusShipped);
+                objOrderHeaders = objOrderHeaders.Where(i => i.OrderStatus == SD.StatusShipped);
                 break;
             case "approved":
-                orderList = orderList.Where(i => i.OrderStatus == SD.StatusApproved);
+                objOrderHeaders = objOrderHeaders.Where(i => i.OrderStatus == SD.StatusApproved);
                 break;
             default:
                 break;
         }
 
-        return Json(new { data = orderList });
+        return Json(new { data = objOrderHeaders });
     }
     #endregion
 }
