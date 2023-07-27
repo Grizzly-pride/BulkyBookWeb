@@ -12,6 +12,7 @@ using System.Security.Claims;
 namespace BulkyBookWeb.Areas.Admin.Controllers;
 
 [Area("admin")]
+[Authorize]
 public class OrderController : Controller
 {
     private readonly IUnitOfWork _unitOfWork;
@@ -65,6 +66,40 @@ public class OrderController : Controller
 
 
         return RedirectToAction(nameof(Details), new { orderId = orderHeaderFromDb.Id });
+    }
+
+
+    [HttpPost]
+    [Authorize(Roles = SD.Role_Admin + "," + SD.Role_Employee)]
+    public IActionResult StartProcessing()
+    {
+        _unitOfWork.OrderHeader.UpdateStatus(OrderViewModel.OrderHeader.Id, SD.StatusInProcess);
+        _unitOfWork.Save();
+
+        TempData["Success"] = "Order Details Updated Successfully.";
+
+        return RedirectToAction(nameof(Details), new { orderId = OrderViewModel.OrderHeader.Id });
+    }
+
+
+    [HttpPost]
+    [Authorize(Roles = SD.Role_Admin + "," + SD.Role_Employee)]
+    public IActionResult ShipOrder()
+    {
+        var orderHeader = _unitOfWork.OrderHeader.GetFirstOrDefault(u => u.Id == OrderViewModel.OrderHeader.Id);
+        orderHeader.TrackingNumber = OrderViewModel.OrderHeader.TrackingNumber;
+        orderHeader.Carrier = OrderViewModel.OrderHeader.Carrier;
+        orderHeader.OrderStatus = SD.StatusShipped;
+        orderHeader.ShippingDate = DateTime.Now;
+        if (orderHeader.PaymentStatus == SD.PaymentStatusDelayedPayment)
+        {
+            orderHeader.PaymentDueDate = DateTime.Now.AddDays(30);
+        }
+
+        _unitOfWork.OrderHeader.Update(orderHeader);
+        _unitOfWork.Save();
+        TempData["Success"] = "Order Shipped Successfully.";
+        return RedirectToAction(nameof(Details), new { orderId = OrderViewModel.OrderHeader.Id });
     }
 
 
