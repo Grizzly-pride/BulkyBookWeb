@@ -6,6 +6,7 @@ using BulkyBook.Utility;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Hosting;
+using Stripe;
 using System.Diagnostics;
 using System.Security.Claims;
 
@@ -100,6 +101,36 @@ public class OrderController : Controller
         _unitOfWork.Save();
         TempData["Success"] = "Order Shipped Successfully.";
         return RedirectToAction(nameof(Details), new { orderId = OrderViewModel.OrderHeader.Id });
+    }
+
+    [HttpPost]
+    [Authorize(Roles = SD.Role_Admin + "," + SD.Role_Employee)]
+    public IActionResult CancelOrder()
+    {
+
+        var orderHeader = _unitOfWork.OrderHeader.GetFirstOrDefault(u => u.Id == OrderViewModel.OrderHeader.Id);
+
+        if (orderHeader.PaymentStatus == SD.PaymentStatusApproved)
+        {
+            var options = new RefundCreateOptions
+            {
+                Reason = RefundReasons.RequestedByCustomer,
+                PaymentIntent = orderHeader.PaymentIntentId
+            };
+
+            var service = new RefundService();
+            Refund refund = service.Create(options);
+
+            _unitOfWork.OrderHeader.UpdateStatus(orderHeader.Id, SD.StatusCancelled, SD.StatusRefunded);
+        }
+        else
+        {
+            _unitOfWork.OrderHeader.UpdateStatus(orderHeader.Id, SD.StatusCancelled, SD.StatusCancelled);
+        }
+        _unitOfWork.Save();
+        TempData["Success"] = "Order Cancelled Successfully.";
+        return RedirectToAction(nameof(Details), new { orderId = OrderViewModel.OrderHeader.Id });
+
     }
 
 
