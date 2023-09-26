@@ -21,6 +21,7 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>()
     .AddDefaultTokenProviders()
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
+builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options => {
 	options.IdleTimeout = TimeSpan.FromMinutes(100);
 	options.Cookie.HttpOnly = true;
